@@ -8,9 +8,16 @@ using System.Text;
 
 namespace IsolatedByInheritanceAndOverride
 {
-    public class OrderService
+    public interface IOrder
+    {
+        void SyncBookOrders();
+        List<Order> GetOrders();
+    }
+
+    public class OrderService : IOrder
     {
         private string _filePath = @"C:\temp\testOrders.csv";
+        public IBookDao _BookDao;
 
         public void SyncBookOrders()
         {
@@ -19,14 +26,19 @@ namespace IsolatedByInheritanceAndOverride
             // only get orders of book
             var ordersOfBook = orders.Where(x => x.Type == "Book");
 
-            var bookDao = new BookDao();
+            _BookDao = GetBookDao();
             foreach (var order in ordersOfBook)
             {
-                bookDao.Insert(order);
+                _BookDao.Insert(order);
             }
         }
 
-        private List<Order> GetOrders()
+        public virtual IBookDao GetBookDao()
+        {
+            return new BookDao();
+        }
+
+        public virtual List<Order> GetOrders()
         {
             // parse csv file to get orders
             var result = new List<Order>();
@@ -80,9 +92,14 @@ namespace IsolatedByInheritanceAndOverride
         public string CustomerName { get; set; }
     }
 
-    public class BookDao
+    public interface IBookDao
     {
-        internal void Insert(Order order)
+        void Insert(Order order);
+    }
+
+    public class BookDao : IBookDao
+    {
+        public void Insert(Order order)
         {
             // directly depend on some web service
             //var client = new HttpClient();
